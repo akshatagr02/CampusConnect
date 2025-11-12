@@ -1,0 +1,8 @@
+{
+  "name": "Campus Connect",
+  "description": "A professional networking platform for college students to connect, discover peers with similar interests and skills, and find academic sessions. This application simulates a social platform experience with profile creation, user discovery, and announcements, all within a frontend-only environment.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
