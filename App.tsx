@@ -316,8 +316,19 @@ const App: React.FC = () => {
                 return <MySessionsPage currentUser={currentUser!} sessions={sessions} setView={setView} onBack={() => setView({ type: 'HOME' })} onJoin={handleJoinOrLeaveSession} onEndSession={handleEndSession} />;
             case 'SKILL_SHARING':
                 return <SkillSharingPage currentUser={currentUser!} sessions={sessions} onJoinOrLeaveSession={handleJoinOrLeaveSession} setView={setView} />;
-            case 'VIDEO_SESSION':
-                return <VideoSessionPage session={view.session} currentUser={currentUser!} allUsers={allUsers} onLeaveSession={handleLeaveVideoSession} />;
+            case 'VIDEO_SESSION': {
+                const liveSession = sessions.find(s => s.id === view.session.id);
+                if (!liveSession) {
+                    return (
+                        <div className="flex h-screen bg-gray-900 text-white flex-col items-center justify-center">
+                             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500 mb-4"></div>
+                             <h1 className="text-xl font-bold">Loading Session...</h1>
+                             <p className="text-sm text-gray-400">If this persists, the session may have ended.</p>
+                        </div>
+                    );
+                }
+                return <VideoSessionPage session={liveSession} currentUser={currentUser!} allUsers={allUsers} onLeaveSession={handleLeaveVideoSession} />;
+            }
             default:
                 return <div>Unknown view</div>;
         }
