@@ -333,7 +333,7 @@ const App: React.FC = () => {
             case 'SKILL_SHARING':
                 return <SkillSharingPage currentUser={currentUser!} sessions={sessions} onJoinOrLeaveSession={handleJoinOrLeaveSession} setView={setView} />;
              case 'DISCOVER_PEERS':
-                return <DiscoverPeersPage currentUser={currentUser!} users={allUsers} sessions={sessions} setView={setView} />;
+                return <DiscoverPeersPage currentUser={currentUser!} users={allUsers} setView={setView} />;
             case 'VIDEO_SESSION': {
                 const liveSession = sessions.find(s => s.id === view.session.id);
                 if (!liveSession) {
