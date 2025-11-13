@@ -31,7 +31,8 @@ import { CreateSessionPage } from './components/CreateSessionPage';
 import { MySessionsPage } from './components/MySessionsPage';
 import { SkillSharingPage } from './components/SkillSharingPage';
 import { VideoSessionPage } from './components/VideoSessionPage';
-import { BellIcon, ChatBubbleIcon, LogoutIcon, PencilIcon, UsersGroupIcon, VideoCameraIcon, ChevronDownIcon } from './components/Icons';
+import { DiscoverPeersPage } from './components/DiscoverPeersPage';
+import { BellIcon, ChatBubbleIcon, LogoutIcon, PencilIcon, UsersGroupIcon, VideoCameraIcon, ChevronDownIcon, HomeIcon, AcademicCapIcon } from './components/Icons';
 import Avatar from './components/Avatar';
 
 const Navbar: React.FC<{ currentUser: UserProfile; setView: (view: View) => void }> = ({ currentUser, setView }) => {
@@ -65,7 +66,8 @@ const Navbar: React.FC<{ currentUser: UserProfile; setView: (view: View) => void
                     <div className="flex items-center">
                         {/* Desktop Menu Links */}
                         <div className="hidden sm:flex sm:items-center sm:space-x-4">
-                            <NavLink view={{ type: 'SKILL_SHARING' }}>Skill Sharing</NavLink>
+                            <NavLink view={{ type: 'SKILL_SHARING' }}>Sessions</NavLink>
+                            <NavLink view={{ type: 'DISCOVER_PEERS' }}>Discover Peers</NavLink>
                             <NavLink view={{ type: 'NOTIFICATIONS' }}>Notifications</NavLink>
                             <NavLink view={{ type: 'CHAT_INBOX' }}>Inbox</NavLink>
                         </div>
@@ -148,7 +150,21 @@ const App: React.FC = () => {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists()) {
-                    const userData = { uid: user.uid, ...userSnap.data() } as UserProfile;
+                    const data = userSnap.data();
+                    const sanitizedData: {[key: string]: any} = {};
+                    Object.keys(data).forEach(key => {
+                        const value = data[key];
+                        if (value && typeof value.toDate === 'function') {
+                            sanitizedData[key] = {
+                                seconds: value.seconds,
+                                nanoseconds: value.nanoseconds,
+                            };
+                        } else {
+                            sanitizedData[key] = value;
+                        }
+                    });
+
+                    const userData = { uid: user.uid, ...sanitizedData } as UserProfile;
                     setCurrentUser(userData);
                     if (!userData.lastCheckedNotifications) {
                         await updateDoc(userRef, { lastCheckedNotifications: serverTimestamp() });
@@ -295,11 +311,11 @@ const App: React.FC = () => {
             case 'EDIT_PROFILE':
                 return <ProfileForm user={currentUser!} onSave={handleSaveProfile} isUpdating={true} onBack={() => setView({ type: 'HOME' })} onSaveTestimonial={handleSaveTestimonial} />;
             case 'HOME':
-                return <HomePage currentUser={currentUser!} users={allUsers} setView={setView} />;
+                return <HomePage currentUser={currentUser!} users={allUsers} sessions={sessions} setView={setView} onJoinOrLeaveSession={handleJoinOrLeaveSession} />;
             case 'PROFILE_DETAIL':
-                return <ProfileDetail user={view.user} currentUser={currentUser!} onBack={() => setView({ type: 'HOME' })} />;
+                return <ProfileDetail user={view.user} currentUser={currentUser!} onBack={() => setView({ type: 'DISCOVER_PEERS' })} />;
             case 'CHAT_INBOX':
-                return <ChatInbox currentUser={currentUser!} allUsers={allUsers} setView={setView} onBack={() => setView({ type: 'HOME' })} />;
+                return <ChatInbox currentUser={currentUser!} allUsers={allUsers} setView={setView} onBack={() => setView({ type: 'DISCOVER_PEERS' })} />;
             case 'CHAT':
                  return (
                     // On mobile, subtract top nav (4rem) and bottom nav (4rem) from viewport height.
@@ -316,6 +332,8 @@ const App: React.FC = () => {
                 return <MySessionsPage currentUser={currentUser!} sessions={sessions} setView={setView} onBack={() => setView({ type: 'HOME' })} onJoin={handleJoinOrLeaveSession} onEndSession={handleEndSession} />;
             case 'SKILL_SHARING':
                 return <SkillSharingPage currentUser={currentUser!} sessions={sessions} onJoinOrLeaveSession={handleJoinOrLeaveSession} setView={setView} />;
+             case 'DISCOVER_PEERS':
+                return <DiscoverPeersPage currentUser={currentUser!} users={allUsers} sessions={sessions} setView={setView} />;
             case 'VIDEO_SESSION': {
                 const liveSession = sessions.find(s => s.id === view.session.id);
                 if (!liveSession) {
@@ -338,16 +356,16 @@ const App: React.FC = () => {
         <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_5px_rgba(0,0,0,0.1)] z-40 border-t">
             <div className="flex justify-around h-16 items-center">
                 <button onClick={() => setView({ type: 'HOME' })} className="flex flex-col items-center text-gray-600 hover:text-indigo-600 w-1/4 py-2">
-                    <UsersGroupIcon className="w-6 h-6" />
-                    <span className="text-xs mt-1">Discover</span>
+                    <HomeIcon className="w-6 h-6" />
+                    <span className="text-xs mt-1">Home</span>
                 </button>
                 <button onClick={() => setView({ type: 'SKILL_SHARING' })} className="flex flex-col items-center text-gray-600 hover:text-indigo-600 w-1/4 py-2">
-                    <VideoCameraIcon className="w-6 h-6" />
+                    <AcademicCapIcon className="w-6 h-6" />
                     <span className="text-xs mt-1">Sessions</span>
                 </button>
-                <button onClick={() => setView({ type: 'NOTIFICATIONS' })} className="flex flex-col items-center text-gray-600 hover:text-indigo-600 w-1/4 py-2">
-                    <BellIcon className="w-6 h-6" />
-                    <span className="text-xs mt-1">Notifications</span>
+                <button onClick={() => setView({ type: 'DISCOVER_PEERS' })} className="flex flex-col items-center text-gray-600 hover:text-indigo-600 w-1/4 py-2">
+                    <UsersGroupIcon className="w-6 h-6" />
+                    <span className="text-xs mt-1">Peers</span>
                 </button>
                 <button onClick={() => setView({ type: 'CHAT_INBOX' })} className="flex flex-col items-center text-gray-600 hover:text-indigo-600 w-1/4 py-2">
                     <ChatBubbleIcon className="w-6 h-6" />

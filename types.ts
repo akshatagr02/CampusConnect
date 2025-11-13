@@ -56,6 +56,7 @@ export type View =
   | { type: 'CREATE_SESSION' }
   | { type: 'MY_SESSIONS' }
   | { type: 'SKILL_SHARING' }
+  | { type: 'DISCOVER_PEERS' }
   | { type: 'VIDEO_SESSION'; session: Session };
   
 export interface ChatMessage {

@@ -1,132 +1,129 @@
-import React, { useState, useMemo } from 'react';
-import { UserProfile, View } from '../types';
-import { COLLEGES, YEARS } from '../constants';
+import React, { useMemo } from 'react';
+import { UserProfile, View, Session } from '../types';
 import Avatar from './Avatar';
-
-// Simple hashing function to get a consistent color for the banner
-const stringToColor = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      hash = hash & hash; // Ensure 32bit integer
-    }
-    const colorRange = [
-        'from-indigo-500 to-blue-500', 
-        'from-purple-500 to-pink-500', 
-        'from-green-400 to-cyan-500',
-        'from-orange-400 to-red-500',
-        'from-teal-400 to-emerald-500'
-    ];
-    return colorRange[Math.abs(hash) % colorRange.length];
-};
+import { SessionCard } from './SessionCard';
+import { AcademicCapIcon } from './Icons';
 
 
 const UserCard: React.FC<{ user: UserProfile; onViewProfile: () => void }> = ({ user, onViewProfile }) => {
-  const truncatedInterests = user.interests.length > 70 ? user.interests.substring(0, 70) + '...' : user.interests;
-  
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-transform transform hover:-translate-y-2 flex flex-col">
-      <div className={`h-24 bg-gradient-to-r ${stringToColor(user.uid)}`}></div>
-      
-      <div className="p-6 flex flex-col flex-grow text-center">
-        <div className="-mt-16 mb-4">
-          <Avatar name={user.name} className="h-24 w-24 text-3xl border-4 border-white shadow-lg mx-auto" />
+    <div className="bg-white rounded-xl shadow-md flex items-center p-4 w-full transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.01]">
+      {/* Left Image */}
+      <div className="flex-shrink-0 mr-6">
+        <Avatar name={user.name} className="h-28 w-28 text-4xl rounded-lg" />
+      </div>
+
+      {/* Right Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top part: Title and College */}
+        <div className="flex justify-between items-start">
+          <h3 className="text-xl font-bold text-gray-900">{user.name}</h3>
+          <div className="text-right ml-4 flex-shrink-0">
+              <p className="text-md font-semibold text-indigo-600 truncate max-w-[200px]">{user.college}</p>
+              <p className="text-sm text-gray-500">{user.year}</p>
+          </div>
         </div>
         
-        <div>
-            <h3 className="text-xl font-bold text-gray-900">{user.name}</h3>
-            <p className="text-sm text-gray-500">{user.college}</p>
-            <p className="text-xs text-gray-400 mt-1">{user.year}</p>
+        {/* Bottom part: Interests and Button */}
+        <div className="flex justify-between items-end mt-2 flex-grow">
+            <p className="text-sm text-gray-600 mr-4">
+                {user.interests.length > 200 ? user.interests.substring(0, 200) + '...' : user.interests}
+            </p>
+            <button
+                onClick={onViewProfile}
+                className="px-5 py-2 bg-gray-700 text-white text-sm font-semibold rounded-md hover:bg-gray-800 transition-colors whitespace-nowrap shadow-sm flex-shrink-0"
+            >
+                View Profile
+            </button>
         </div>
-
-        <p className="text-sm text-gray-600 mt-4 flex-grow">
-          "{truncatedInterests}"
-        </p>
-
-        <div className="mt-4 pt-4 border-t w-full">
-            <h4 className="font-semibold text-sm text-gray-600 mb-3">Top Skills</h4>
-            <div className="flex flex-wrap justify-center gap-2">
-            {user.skills.slice(0, 3).map(skill => (
-                <span key={skill} className="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">{skill}</span>
-            ))}
-            {user.skills.length > 3 && <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">+{user.skills.length - 3} more</span>}
-            </div>
-        </div>
-      </div>
-      
-      <div className="p-4 bg-gray-50 border-t mt-auto">
-        <button
-          onClick={onViewProfile}
-          className="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          View Profile
-        </button>
       </div>
     </div>
   );
 };
 
+// Function to shuffle an array
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const newArr = [...array];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
+};
+
+
 export const HomePage: React.FC<{
   currentUser: UserProfile;
   users: UserProfile[];
+  sessions: Session[];
   setView: (view: View) => void;
-}> = ({ currentUser, users, setView }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [collegeFilter, setCollegeFilter] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
+  onJoinOrLeaveSession: (session: Session, action: 'join' | 'leave') => void;
+}> = ({ currentUser, users, sessions, setView, onJoinOrLeaveSession }) => {
 
-  const filteredUsers = useMemo(() => {
-    return users
-      .filter(user => user.uid !== currentUser.uid)
-      .filter(user => {
-        const lowerSearch = searchTerm.toLowerCase();
-        const matchesName = user.name.toLowerCase().includes(lowerSearch);
-        const matchesCollege = user.college.toLowerCase().includes(lowerSearch);
-        const matchesSkills = user.skills.some(skill => skill.toLowerCase().includes(lowerSearch));
-        
-        const matchesCollegeFilter = !collegeFilter || user.college === collegeFilter;
-        const matchesYearFilter = !yearFilter || user.year === yearFilter;
+  const randomUsers = useMemo(() => {
+    const otherUsers = users.filter(user => user.uid !== currentUser.uid);
+    return shuffleArray(otherUsers).slice(0, 3);
+  }, [users, currentUser.uid]);
 
-        return (matchesName || matchesCollege || matchesSkills) && matchesCollegeFilter && matchesYearFilter;
-      });
-  }, [users, currentUser.uid, searchTerm, collegeFilter, yearFilter]);
+  const randomSessions = useMemo(() => {
+    const upcomingSessions = sessions.filter(s => s.status === 'scheduled' && s.creatorId !== currentUser.uid);
+    return shuffleArray(upcomingSessions).slice(0, 3);
+  }, [sessions, currentUser.uid]);
+
+  const discoverItems = useMemo(() => {
+      const userItems = randomUsers.map(user => ({ type: 'user' as const, data: user, id: user.uid }));
+      const sessionItems = randomSessions.map(session => ({ type: 'session' as const, data: session, id: session.id }));
+      return shuffleArray([...userItems, ...sessionItems]);
+  }, [randomUsers, randomSessions]);
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Discover Peers</h1>
-        <p className="text-gray-600 mt-2">Find and connect with students from various colleges and fields of study.</p>
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            placeholder="Search by name, college, or skill..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-gray-900 md:col-span-3"
-          />
-          <select value={collegeFilter} onChange={e => setCollegeFilter(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 md:col-span-2">
-            <option value="">All Colleges</option>
-            {COLLEGES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900">
-            <option value="">All Years</option>
-            {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
+    <div className="container mx-auto p-4 md:p-8 space-y-12">
+      {/* Welcome banner */}
+      <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+        <h1 className="text-4xl font-bold text-gray-800">Welcome back, {currentUser.name.split(' ')[0]}!</h1>
+        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">Here's a quick look at what's happening on Campus Connect. Discover new sessions to join and peers to connect with.</p>
       </div>
 
-      {filteredUsers.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredUsers.map(user => (
-            <UserCard key={user.uid} user={user} onViewProfile={() => setView({ type: 'PROFILE_DETAIL', user })} />
-          ))}
+      {/* Unified Discover Section */}
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Discover What's New</h2>
         </div>
-      ) : (
-        <div className="text-center py-16">
-            <h3 className="text-xl font-semibold text-gray-700">No users found.</h3>
-            <p className="text-gray-500 mt-2">Try adjusting your search or filters.</p>
-        </div>
-      )}
+        {discoverItems.length > 0 ? (
+          <div className="grid grid-cols-1 gap-8">
+            {discoverItems.map(item => {
+                if (item.type === 'session') {
+                    // SessionCard is a vertical card by design
+                    return (
+                        <SessionCard 
+                            key={item.id} 
+                            session={item.data} 
+                            currentUser={currentUser} 
+                            onJoinOrLeaveSession={onJoinOrLeaveSession} 
+                        />
+                    );
+                }
+                if (item.type === 'user') {
+                     // UserCard is the new horizontal card
+                     return (
+                        <UserCard 
+                            key={item.id} 
+                            user={item.data} 
+                            onViewProfile={() => setView({ type: 'PROFILE_DETAIL', user: item.data })} 
+                        />
+                     );
+                }
+                return null;
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-10 bg-white rounded-2xl shadow-lg">
+              <AcademicCapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-700">Nothing new to show right now.</h3>
+              <p className="text-gray-500 mt-1">Check back later or create your own session!</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
