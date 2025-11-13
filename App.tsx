@@ -189,7 +189,22 @@ const App: React.FC = () => {
         }
 
         const usersUnsub = onSnapshot(collection(db, 'users'), (snapshot) => {
-            const usersData = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile));
+            const usersData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                const sanitizedData: { [key: string]: any } = {};
+                Object.keys(data).forEach(key => {
+                    const value = data[key];
+                    if (value && typeof value.toDate === 'function') {
+                        sanitizedData[key] = {
+                            seconds: value.seconds,
+                            nanoseconds: value.nanoseconds,
+                        };
+                    } else {
+                        sanitizedData[key] = value;
+                    }
+                });
+                return { uid: doc.id, ...sanitizedData } as UserProfile;
+            });
             setAllUsers(usersData);
         });
 
