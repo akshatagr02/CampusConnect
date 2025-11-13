@@ -61,14 +61,17 @@ const Navbar: React.FC<{ currentUser: UserProfile; setView: (view: View) => void
                         </div>
                     </div>
                     
-                    {/* Desktop Menu */}
-                    <div className="hidden sm:flex sm:items-center sm:space-x-4">
-                        <NavLink view={{ type: 'SKILL_SHARING' }}>Skill Sharing</NavLink>
-                        <NavLink view={{ type: 'NOTIFICATIONS' }}>Notifications</NavLink>
-                        <NavLink view={{ type: 'CHAT_INBOX' }}>Inbox</NavLink>
+                    {/* Right side content */}
+                    <div className="flex items-center">
+                        {/* Desktop Menu Links */}
+                        <div className="hidden sm:flex sm:items-center sm:space-x-4">
+                            <NavLink view={{ type: 'SKILL_SHARING' }}>Skill Sharing</NavLink>
+                            <NavLink view={{ type: 'NOTIFICATIONS' }}>Notifications</NavLink>
+                            <NavLink view={{ type: 'CHAT_INBOX' }}>Inbox</NavLink>
+                        </div>
                         
                         {/* Profile Dropdown */}
-                        <div className="relative group">
+                        <div className="relative group sm:ml-4">
                             <button className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 <Avatar name={currentUser.name} className="h-10 w-10" />
                                 <span className="hidden lg:block font-medium text-gray-700">{currentUser.name}</span>
