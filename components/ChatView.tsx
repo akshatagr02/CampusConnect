@@ -95,7 +95,7 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, currentUser, otherUser, onB
 
   return (
     <div className="h-full bg-white flex flex-col">
-      <header className="flex items-center p-3 border-b shadow-sm sticky top-0 bg-white z-10 flex-shrink-0">
+      <header className="flex items-center p-3 border-b shadow-sm bg-white z-10 flex-shrink-0">
         {!hideBackButton && (
             <button onClick={onBack} className="text-blue-600 hover:text-blue-800 font-bold p-2 rounded-full hover:bg-gray-100">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,14 +140,14 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, currentUser, otherUser, onB
         <div ref={messagesEndRef} />
       </main>
 
-      <footer className="p-3 border-t bg-white sticky bottom-0 flex-shrink-0">
+      <footer className="p-3 border-t bg-white flex-shrink-0">
         <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 w-full p-3 border border-gray-200 bg-gray-100 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+            className="flex-1 w-full p-3 border border-gray-200 bg-gray-100 text-gray-900 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
             autoComplete="off"
           />
           <button type="submit" className="bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition-transform transform hover:scale-110 disabled:bg-blue-300 disabled:scale-100" disabled={!newMessage.trim()}>

@@ -301,7 +301,13 @@ const App: React.FC = () => {
             case 'CHAT_INBOX':
                 return <ChatInbox currentUser={currentUser!} allUsers={allUsers} setView={setView} onBack={() => setView({ type: 'HOME' })} />;
             case 'CHAT':
-                 return <ChatView chatId={view.chatId} currentUser={currentUser!} otherUser={view.otherUser} onBack={() => setView({ type: 'CHAT_INBOX' })} />;
+                 return (
+                    // On mobile, subtract top nav (4rem) and bottom nav (4rem) from viewport height.
+                    // On desktop, subtract only top nav (4rem).
+                    <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-4rem)]">
+                        <ChatView chatId={view.chatId} currentUser={currentUser!} otherUser={view.otherUser} onBack={() => setView({ type: 'CHAT_INBOX' })} />
+                    </div>
+                 );
             case 'NOTIFICATIONS':
                 return <NotificationsPage currentUser={currentUser!} sessions={sessions} setView={setView} onBack={() => setView({ type: 'HOME' })} />;
             case 'CREATE_SESSION':
