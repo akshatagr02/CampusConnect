@@ -106,9 +106,7 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, currentUser, otherUser, onB
         <div className={`flex items-center space-x-3 ${!hideBackButton ? 'ml-2' : ''}`}>
             <Avatar name={otherUser.name} className="h-10 w-10" />
             <div>
-              <h2 className="text-lg font-semibold">{otherUser.name}</h2>
-              {/* This is a placeholder, a real presence system would be more complex */}
-              <p className="text-xs text-gray-500">Online</p> 
+              <h2 className="text-lg font-semibold text-gray-900">{otherUser.name}</h2>
             </div>
         </div>
       </header>

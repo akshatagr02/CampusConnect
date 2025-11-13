@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
-import { MailIcon, LightBulbIcon, WrenchScrewdriverIcon } from './Icons';
+import { MailIcon, LightBulbIcon, WrenchScrewdriverIcon, ChatBubbleIcon, XCircleIcon } from './Icons';
 import ChatView from './ChatView';
 import Avatar from './Avatar';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -32,6 +32,7 @@ interface ProfileDetailProps {
 export const ProfileDetail: React.FC<ProfileDetailProps> = ({ user, currentUser, onBack }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [isChatLoading, setIsChatLoading] = useState(true);
+  const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
 
   useEffect(() => {
     const setupChat = async () => {
@@ -59,6 +60,32 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({ user, currentUser,
 
     setupChat();
   }, [currentUser, user.uid]);
+  
+  const ChatContent = () => {
+      if (isChatLoading) {
+        return (
+            <div className="flex items-center justify-center h-full min-h-[400px]">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+        );
+      }
+      if (chatId) {
+        return (
+            <ChatView
+                chatId={chatId}
+                currentUser={currentUser}
+                otherUser={user}
+                onBack={() => setIsChatPopupOpen(false)}
+                hideBackButton={true}
+            />
+        );
+      }
+      return (
+        <div className="flex items-center justify-center h-full text-gray-500 p-8 text-center min-h-[400px]">
+            Could not load chat session. Please try again later.
+        </div>
+      );
+  }
 
   return (
     <div className="bg-slate-50">
@@ -83,6 +110,15 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({ user, currentUser,
                     <p className="text-md text-gray-600">{user.college}</p>
                     <p className="text-sm text-gray-500">{user.year}</p>
                   </div>
+                </div>
+                <div className="p-4 text-center md:hidden">
+                    <button
+                        onClick={() => setIsChatPopupOpen(true)}
+                        className="mt-2 w-full flex justify-center items-center px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-400/50"
+                    >
+                        <ChatBubbleIcon className="w-5 h-5 mr-2" />
+                        Message {user.name.split(' ')[0]}
+                    </button>
                 </div>
               </div>
             </div>
@@ -118,28 +154,30 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({ user, currentUser,
             </div>
           </div>
 
-          {/* Right Side: Chat View */}
-          <div className="w-full md:w-3/5 flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden">
-            {isChatLoading ? (
-              <div className="flex items-center justify-center h-full min-h-[400px]">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
-              </div>
-            ) : chatId ? (
-              <ChatView
-                chatId={chatId}
-                currentUser={currentUser}
-                otherUser={user}
-                onBack={() => {}}
-                hideBackButton={true}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 p-8 text-center min-h-[400px]">
-                Could not load chat session. Please try again later.
-              </div>
-            )}
+          {/* Right Side: Chat View (Desktop) */}
+          <div className="hidden md:flex w-full md:w-3/5 flex-col bg-white rounded-2xl shadow-lg overflow-hidden">
+            <ChatContent />
           </div>
         </div>
       </div>
+      
+      {/* Chat Popup (Mobile) */}
+      {isChatPopupOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 md:hidden animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg h-[85vh] flex flex-col relative animate-slide-up">
+                <button
+                    onClick={() => setIsChatPopupOpen(false)}
+                    aria-label="Close chat"
+                    className="absolute -top-2 -right-2 text-gray-600 bg-white rounded-full p-1 shadow-lg hover:text-red-500 z-20 transition-transform transform hover:scale-110"
+                >
+                    <XCircleIcon className="w-8 h-8" />
+                </button>
+                <div className="w-full h-full overflow-hidden rounded-2xl">
+                    <ChatContent />
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
