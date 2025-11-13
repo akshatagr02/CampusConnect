@@ -7,31 +7,33 @@ import { AcademicCapIcon } from './Icons';
 
 const UserCard: React.FC<{ user: UserProfile; onViewProfile: () => void }> = ({ user, onViewProfile }) => {
   return (
-    <div className="bg-white rounded-xl shadow-md flex items-center p-4 w-full transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.01]">
-      {/* Left Image */}
-      <div className="flex-shrink-0 mr-6">
+    <div className="bg-white rounded-xl shadow-md flex flex-col sm:flex-row items-center p-4 w-full transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.01]">
+      {/* Avatar */}
+      <div className="flex-shrink-0 mb-4 sm:mb-0 sm:mr-6">
         <Avatar name={user.name} className="h-28 w-28 text-4xl rounded-lg" />
       </div>
 
-      {/* Right Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top part: Title and College */}
-        <div className="flex justify-between items-start">
-          <h3 className="text-xl font-bold text-gray-900">{user.name}</h3>
-          <div className="text-right ml-4 flex-shrink-0">
-              <p className="text-md font-semibold text-indigo-600 truncate max-w-[200px]">{user.college}</p>
-              <p className="text-sm text-gray-500">{user.year}</p>
+      {/* Content */}
+      <div className="flex-1 flex flex-col w-full">
+        {/* Top: Name & College */}
+        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start w-full">
+          <div className="text-center sm:text-left">
+            <h3 className="text-xl font-bold text-gray-900">{user.name}</h3>
+            <p className="text-sm text-gray-500">{user.year}</p>
           </div>
+          <p className="text-md font-semibold text-indigo-600 truncate max-w-full sm:max-w-[200px] text-center sm:text-right mt-1 sm:mt-0 sm:ml-4 flex-shrink-0">{user.college}</p>
         </div>
         
-        {/* Bottom part: Interests and Button */}
-        <div className="flex justify-between items-end mt-2 flex-grow">
-            <p className="text-sm text-gray-600 mr-4">
-                {user.interests.length > 200 ? user.interests.substring(0, 200) + '...' : user.interests}
-            </p>
+        {/* Middle: Interests */}
+        <p className="text-sm text-gray-600 my-4 text-center sm:text-left">
+            {user.interests.length > 150 ? user.interests.substring(0, 150) + '...' : user.interests}
+        </p>
+        
+        {/* Bottom: Button */}
+        <div className="w-full sm:w-auto sm:self-end">
             <button
                 onClick={onViewProfile}
-                className="px-5 py-2 bg-gray-700 text-white text-sm font-semibold rounded-md hover:bg-gray-800 transition-colors whitespace-nowrap shadow-sm flex-shrink-0"
+                className="w-full px-5 py-2 bg-gray-700 text-white text-sm font-semibold rounded-md hover:bg-gray-800 transition-colors whitespace-nowrap shadow-sm"
             >
                 View Profile
             </button>
