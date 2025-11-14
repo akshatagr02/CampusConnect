@@ -317,7 +317,7 @@ const App: React.FC = () => {
             case 'LANDING':
                 return <LandingPage testimonials={testimonials} setView={setView} />;
             case 'AUTH':
-                return <Auth />;
+                return <Auth isSigningUp={view.isSigningUp} />;
             case 'CREATE_PROFILE':
                 const newUserProfile: Omit<UserProfile, 'uid'> & {uid: string} = {
                     uid: view.uid, email: view.email, name: '', mobile: '', college: '', year: '', interests: '', skills: []

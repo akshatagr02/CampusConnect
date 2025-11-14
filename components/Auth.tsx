@@ -25,8 +25,12 @@ const getFriendlyErrorMessage = (errorCode: string): string => {
     }
 }
 
-export const Auth: React.FC = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+interface AuthProps {
+  isSigningUp?: boolean;
+}
+
+export const Auth: React.FC<AuthProps> = ({ isSigningUp = false }) => {
+  const [isSignUp, setIsSignUp] = useState(isSigningUp);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -58,7 +62,7 @@ export const Auth: React.FC = () => {
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
           Campus Connect
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-xl font-medium text-gray-700">
           {isSignUp ? 'Create an account to get started' : 'Sign in to connect with your peers'}
         </p>
       </div>

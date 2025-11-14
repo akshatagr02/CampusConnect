@@ -38,7 +38,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ testimonials, setView 
                 Sign In
               </button>
               <button
-                onClick={() => setView({ type: 'AUTH' })}
+                onClick={() => setView({ type: 'AUTH', isSigningUp: true })}
                 className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
               >
                 Sign Up
@@ -59,7 +59,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ testimonials, setView 
               Your exclusive professional network to discover peers, share skills, and join academic sessions at your university.
             </p>
             <button
-              onClick={() => setView({ type: 'AUTH' })}
+              onClick={() => setView({ type: 'AUTH', isSigningUp: true })}
               className="mt-8 px-8 py-3 text-lg font-semibold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transform hover:scale-105 transition-transform"
             >
               Get Started

@@ -2,7 +2,7 @@
 export const COLLEGES = [
   "IIM Raipur (Indian Institute of Management, Raipur)",
   "Rungta College of Engineering & Technology, Bhilai",
-  "Bhilai Institute of Technology, Durg",
+  "Bhilai Institute of Technology, Bhilai",
   "Bhilai Institute of Technology, Raipur",
   "Government Engineering College, Raipur (GEC Raipur)",
   "Shri Shankaracharya Institute of Technology & Management, Bhilai",

@@ -45,7 +45,7 @@ export interface Session {
 export type View =
   | { type: 'LOADING' }
   | { type: 'LANDING' }
-  | { type: 'AUTH' }
+  | { type: 'AUTH'; isSigningUp?: boolean }
   | { type: 'CREATE_PROFILE'; email: string; uid: string }
   | { type: 'EDIT_PROFILE' }
   | { type: 'HOME' }
