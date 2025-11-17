@@ -47,25 +47,27 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, currentUser, otherUser, onB
     });
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      let msgs = querySnapshot.docs.map(doc => {
+      const msgs = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        const createdAt = data.createdAt 
-            ? { seconds: data.createdAt.seconds, nanoseconds: data.createdAt.nanoseconds }
-            : { seconds: Date.now() / 1000, nanoseconds: 0 }; // Fallback for optimistic updates
+        // Explicitly map properties to a new object to avoid circular references
+        // from Firestore's internal objects, which can cause serialization errors.
         return {
           id: doc.id,
           text: data.text,
           senderId: data.senderId,
-          createdAt: createdAt,
+          createdAt: data.createdAt 
+            ? { seconds: data.createdAt.seconds, nanoseconds: data.createdAt.nanoseconds }
+            : { seconds: Date.now() / 1000, nanoseconds: 0 }, // Fallback for optimistic updates
         } as ChatMessage;
       });
 
+      let filteredMsgs = msgs;
       // Filter messages if the other user is blocked by the current user
       if (isBlockedByMe) {
-        msgs = msgs.filter(msg => msg.senderId === currentUser.uid);
+        filteredMsgs = msgs.filter(msg => msg.senderId === currentUser.uid);
       }
 
-      setMessages(msgs);
+      setMessages(filteredMsgs);
     }, (error) => {
         console.error("Error fetching messages:", error);
     });

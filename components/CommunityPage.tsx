@@ -157,7 +157,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, author, currentUser, isCommun
                                 <img
                                     src={post.imageUrls[0]}
                                     alt={`Post image 1`}
-                                    className="w-full h-full object-cover"
+                                    className="h-full object-contain m-auto"
+                                    style={{"width":"fit-content"}}
                                 />
                             </div>
                         </a>
@@ -180,7 +181,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, author, currentUser, isCommun
                                         <img
                                             src={url}
                                             alt={`Post image ${index + 1}`}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-contain"
                                             draggable="false"
                                         />
                                     </div>
