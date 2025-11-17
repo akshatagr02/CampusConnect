@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Session, UserProfile, View } from '../types';
 import { PlusIcon, VideoCameraIcon, CalendarDaysIcon, XCircleIcon } from './Icons';
-import { Timestamp } from 'firebase/firestore';
 
 
 // Helper to format date and time
-const formatDateTime = (timestamp: { seconds: number } | Timestamp) => {
+const formatDateTime = (timestamp: { seconds: number }) => {
     if (!timestamp) return 'Not scheduled';
-    const date = (timestamp as Timestamp).toDate ? (timestamp as Timestamp).toDate() : new Date((timestamp as { seconds: number }).seconds * 1000);
+    const date = new Date(timestamp.seconds * 1000);
     return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 };
 

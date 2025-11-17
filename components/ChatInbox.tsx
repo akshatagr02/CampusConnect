@@ -74,13 +74,14 @@ const ChatInbox: React.FC<ChatInboxProps> = ({ currentUser, allUsers, setView, o
     return () => unsubscribe();
   }, [currentUser.uid]);
 
-  const handleSelectChat = (convo: ChatConversation) => {
-    const otherUserId = convo.participants.find(p => p !== currentUser.uid);
-    if (otherUserId) {
-      const otherUser = usersMap.get(otherUserId);
-      if (otherUser) {
-        setView({ type: 'CHAT', chatId: convo.id, otherUser });
-      }
+  const handleSelectChat = (convo: ChatConversation, otherUser: UserProfile | null) => {
+    if (otherUser) {
+        const isBlocked = (currentUser.blockedUsers || []).includes(otherUser.uid);
+        if (isBlocked) {
+            setView({ type: 'PROFILE_DETAIL', user: otherUser });
+        } else {
+            setView({ type: 'CHAT', chatId: convo.id, otherUser });
+        }
     }
   };
 
@@ -110,16 +111,23 @@ const ChatInbox: React.FC<ChatInboxProps> = ({ currentUser, allUsers, setView, o
                     const otherUserId = convo.participants.find(p => p !== currentUser.uid);
                     const otherUser = otherUserId ? usersMap.get(otherUserId) : null;
                     const lastMessageText = convo.lastMessage ? `${convo.lastMessage.senderId === currentUser.uid ? "You: " : ""}${convo.lastMessage.text}` : 'No messages yet...';
+
+                    if (!otherUser) return null; // Don't render if the other user data is not available yet
+
+                    const isBlockedByMe = (currentUser.blockedUsers || []).includes(otherUser.uid);
                     const isUnread = convo.unreadCount && convo.unreadCount[currentUser.uid] > 0;
 
                     return (
-                        <div key={convo.id} onClick={() => handleSelectChat(convo)} className="p-4 hover:bg-gray-50 cursor-pointer flex items-center space-x-4 border-b last:border-b-0 transition-colors duration-200">
-                            <div className="flex-shrink-0">
+                        <div key={convo.id} onClick={() => handleSelectChat(convo, otherUser)} className={`p-4 cursor-pointer flex items-center space-x-4 border-b last:border-b-0 transition-colors duration-200 ${isBlockedByMe ? 'bg-gray-100' : 'hover:bg-gray-50'}`}>
+                            <div className={`flex-shrink-0 ${isBlockedByMe ? 'grayscale' : ''}`}>
                                 <Avatar name={otherUser?.name || '??'} className="h-14 w-14 text-xl" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-center">
-                                    <p className={`text-md truncate ${isUnread ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'}`}>{otherUser?.name || 'Unknown User'}</p>
+                                    <p className={`text-md truncate ${isUnread && !isBlockedByMe ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'}`}>
+                                      {otherUser?.name || 'Unknown User'}
+                                      {isBlockedByMe && <span className="text-xs font-bold text-white bg-gray-700 px-2 py-1 rounded-full ml-2">BLOCKED</span>}
+                                    </p>
                                     {convo.lastMessage?.createdAt && (
                                         <p className="text-xs text-gray-500 whitespace-nowrap">
                                             {formatTimestamp(convo.lastMessage.createdAt)}
@@ -127,8 +135,10 @@ const ChatInbox: React.FC<ChatInboxProps> = ({ currentUser, allUsers, setView, o
                                     )}
                                 </div>
                                 <div className="flex justify-between items-center mt-1">
-                                    <p className={`text-sm truncate ${isUnread ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>{lastMessageText}</p>
-                                    {isUnread && (
+                                    <p className={`text-sm truncate ${isUnread && !isBlockedByMe ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
+                                      {isBlockedByMe ? 'You have blocked this user.' : lastMessageText}
+                                    </p>
+                                    {isUnread && !isBlockedByMe && (
                                          <span className="w-3 h-3 bg-blue-500 rounded-full flex-shrink-0 ml-2"></span>
                                     )}
                                 </div>

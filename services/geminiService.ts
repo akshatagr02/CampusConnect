@@ -27,6 +27,8 @@ export const generateSkills = async (interests: string): Promise<string[]> => {
               }
             }
           },
+          // FIX: Added propertyOrdering to ensure consistent JSON output.
+          propertyOrdering: ["skills"],
           required: ["skills"]
         }
       }

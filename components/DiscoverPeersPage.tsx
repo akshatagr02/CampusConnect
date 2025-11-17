@@ -3,11 +3,12 @@ import { UserProfile, View } from '../types';
 import { COLLEGES, YEARS } from '../constants';
 import Avatar from './Avatar';
 
-const UserCard: React.FC<{ user: UserProfile; onViewProfile: () => void }> = ({ user, onViewProfile }) => {
+const UserCard: React.FC<{ user: UserProfile; onViewProfile: () => void; currentUser: UserProfile; }> = ({ user, onViewProfile, currentUser }) => {
+  const isBlocked = currentUser.blockedUsers?.includes(user.uid);
   const truncatedInterests = user.interests.length > 100 ? user.interests.substring(0, 100) + '...' : user.interests;
   
   return (
-    <div className="bg-white rounded-lg shadow-md flex flex-col sm:flex-row p-4 transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02]">
+    <div className={`bg-white rounded-lg shadow-md flex flex-col sm:flex-row p-4 transition-all duration-300 ease-in-out ${isBlocked ? 'grayscale' : 'hover:shadow-xl hover:scale-[1.02]'}`}>
         {/* Image on left */}
         <div className="flex-shrink-0 sm:mr-4 mb-4 sm:mb-0 mx-auto sm:mx-0">
             <Avatar name={user.name} className="h-28 w-28 text-4xl rounded-md" />
@@ -16,8 +17,9 @@ const UserCard: React.FC<{ user: UserProfile; onViewProfile: () => void }> = ({ 
         {/* Main content area */}
         <div className="flex-1 flex flex-col text-center sm:text-left">
             <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start">
-                <div className="flex-grow">
+                <div className="flex-grow flex items-center justify-center sm:justify-start">
                     <h3 className="text-xl font-bold text-gray-900">{user.name}</h3>
+                    {isBlocked && <span className="ml-3 text-xs font-bold text-white bg-gray-700 px-2 py-1 rounded-full">BLOCKED</span>}
                 </div>
                 <div className="text-center sm:text-right flex-shrink-0 sm:ml-4 mt-2 sm:mt-0">
                     <p className="text-sm font-semibold text-indigo-600 truncate max-w-[200px] sm:max-w-[150px]">{user.college}</p>
@@ -101,7 +103,7 @@ export const DiscoverPeersPage: React.FC<{
             {filteredUsers.length > 0 ? (
                 <div className="space-y-4">
                 {filteredUsers.map(user => (
-                    <UserCard key={user.uid} user={user} onViewProfile={() => setView({ type: 'PROFILE_DETAIL', user })} />
+                    <UserCard key={user.uid} user={user} onViewProfile={() => setView({ type: 'PROFILE_DETAIL', user })} currentUser={currentUser} />
                 ))}
                 </div>
             ) : (

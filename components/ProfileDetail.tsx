@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserProfile } from '../types';
-import { MailIcon, LightBulbIcon, WrenchScrewdriverIcon, ChatBubbleIcon, XCircleIcon } from './Icons';
+import { MailIcon, LightBulbIcon, WrenchScrewdriverIcon, ChatBubbleIcon, XCircleIcon, UserMinusIcon } from './Icons';
 import ChatView from './ChatView';
 import Avatar from './Avatar';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -27,16 +27,21 @@ interface ProfileDetailProps {
   user: UserProfile;
   currentUser: UserProfile;
   onBack: () => void;
+  onToggleBlockUser: (targetUserId: string) => void;
 }
 
-export const ProfileDetail: React.FC<ProfileDetailProps> = ({ user, currentUser, onBack }) => {
+export const ProfileDetail: React.FC<ProfileDetailProps> = ({ user, currentUser, onBack, onToggleBlockUser }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [isChatLoading, setIsChatLoading] = useState(true);
   const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
+  const isBlocked = currentUser.blockedUsers?.includes(user.uid);
 
   useEffect(() => {
     const setupChat = async () => {
-      if (!currentUser) return;
+      if (!currentUser || isBlocked) {
+        setIsChatLoading(false);
+        return;
+      }
       setIsChatLoading(true);
       const participants = [currentUser.uid, user.uid].sort();
       const generatedChatId = participants.join('_');
@@ -59,9 +64,18 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({ user, currentUser,
     };
 
     setupChat();
-  }, [currentUser, user.uid]);
+  }, [currentUser, user.uid, isBlocked]);
   
   const ChatContent = () => {
+      if (isBlocked) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8 text-center min-h-[400px]">
+                <UserMinusIcon className="w-16 h-16 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-700">User Blocked</h3>
+                <p className="max-w-xs mt-1">Unblock {user.name} to view and send messages.</p>
+            </div>
+        );
+      }
       if (isChatLoading) {
         return (
             <div className="flex items-center justify-center h-full min-h-[400px]">
@@ -111,14 +125,30 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({ user, currentUser,
                     <p className="text-sm text-gray-500">{user.year}</p>
                   </div>
                 </div>
-                <div className="p-4 text-center md:hidden">
+                <div className="mt-4 p-4">
+                  <div className="flex items-center justify-center space-x-2">
                     <button
                         onClick={() => setIsChatPopupOpen(true)}
-                        className="mt-2 w-full flex justify-center items-center px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-400/50"
+                        disabled={isBlocked}
+                        className="flex-grow flex justify-center items-center px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-400/50 disabled:bg-gray-400 disabled:shadow-none disabled:cursor-not-allowed"
                     >
                         <ChatBubbleIcon className="w-5 h-5 mr-2" />
                         Message {user.name.split(' ')[0]}
                     </button>
+                    <button
+                        onClick={() => onToggleBlockUser(user.uid)}
+                        className={`flex-shrink-0 flex items-center px-4 py-3 font-semibold rounded-lg transition-colors ${
+                            isBlocked
+                                ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                                : 'bg-red-100 text-red-800 hover:bg-red-200'
+                        }`}
+                        aria-label={isBlocked ? 'Unblock user' : 'Block user'}
+                    >
+                        <UserMinusIcon className="w-5 h-5 mr-2" />
+                        {isBlocked ? 'Unblock' : 'Block'}
+                    </button>
+                  </div>
+                  {isBlocked && <p className="text-center text-red-600 font-medium mt-3 text-sm">You have blocked this user.</p>}
                 </div>
               </div>
             </div>

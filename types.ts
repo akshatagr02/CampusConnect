@@ -18,7 +18,8 @@ export interface UserProfile {
   year: string;
   interests: string;
   skills: string[];
-  lastCheckedNotifications?: { seconds: number; nanoseconds: number };
+  followingCommunities?: string[];
+  blockedUsers?: string[];
 }
 
 export interface Session {
@@ -42,6 +43,61 @@ export interface Session {
   completedAt?: { seconds: number; nanoseconds: number };
 }
 
+export interface Community {
+  id: string;
+  name: string;
+  description: string;
+  profilePictureUrl: string;
+  college: string;
+  ownerId: string;
+  adminIds: string[];
+  followerIds?: string[];
+  createdAt: { seconds: number; nanoseconds: number };
+}
+
+export interface CommunityPost {
+  id: string;
+  communityId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatarName: string; // Storing the name for the avatar
+  text: string;
+  imageUrls?: string[];
+  likes?: string[];
+  createdAt: { seconds: number; nanoseconds: number };
+}
+
+export interface Comment {
+  id: string;
+  postId: string;
+  communityId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatarName: string;
+  text: string;
+  createdAt: { seconds: number; nanoseconds: number };
+}
+
+export type Notification = {
+  id: string;
+  userId: string;
+  createdAt: { seconds: number; nanoseconds: number };
+  isRead: boolean;
+} & (
+  {
+    type: 'NEW_COMMUNITY_POST';
+    communityId: string;
+    communityName: string;
+    postId: string;
+    postAuthorName: string;
+  } | {
+    type: 'NEW_SESSION';
+    sessionId: string;
+    sessionTopic: string;
+    sessionCreatorName: string;
+  }
+);
+
 export type View =
   | { type: 'LOADING' }
   | { type: 'LANDING' }
@@ -57,8 +113,14 @@ export type View =
   | { type: 'MY_SESSIONS' }
   | { type: 'SKILL_SHARING' }
   | { type: 'DISCOVER_PEERS' }
-  | { type: 'VIDEO_SESSION'; session: Session };
-  
+  | { type: 'VIDEO_SESSION'; session: Session }
+  | { type: 'COMMUNITY_AUTH' }
+  | { type: 'CREATE_COMMUNITY' }
+  | { type: 'COMMUNITY_PAGE'; community: Community }
+  | { type: 'MY_COMMUNITIES' }
+  | { type: 'COMMUNITY_ADMIN'; community: Community }
+  | { type: 'COMMUNITY_POST_DETAIL'; post: CommunityPost; community: Community };
+
 export interface ChatMessage {
   id: string;
   text: string;
@@ -67,7 +129,7 @@ export interface ChatMessage {
 }
 
 export interface ChatConversation {
-  id: string;
+  id:string;
   participants: string[];
   lastMessage?: {
     text: string;

@@ -24,39 +24,16 @@ const TestimonialCard: React.FC<{ testimonial: Testimonial }> = ({ testimonial }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ testimonials, setView }) => {
   return (
-    <div className="bg-slate-50 min-h-screen">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg sticky top-0 z-50">
-        <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <span className="font-bold text-xl text-indigo-600">Campus Connect</span>
-            <div className="space-x-2">
-              <button
-                onClick={() => setView({ type: 'AUTH' })}
-                className="px-4 py-2 text-sm font-medium text-indigo-600 rounded-md hover:bg-indigo-50"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => setView({ type: 'AUTH', isSigningUp: true })}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-              >
-                Sign Up
-              </button>
-            </div>
-          </div>
-        </nav>
-      </header>
-
+    <div className="bg-slate-50">
       <main>
         {/* Hero Section */}
         <section className="py-20 md:py-32 bg-white">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 tracking-tight">
-              Connect, Collaborate, and Grow.
+              Build Your Campus Community.
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
-              Your exclusive professional network to discover peers, share skills, and join academic sessions at your university.
+              Create a dedicated space for your club, study group, or project. Connect with peers who share your interests and build something amazing together.
             </p>
             <button
               onClick={() => setView({ type: 'AUTH', isSigningUp: true })}
@@ -86,6 +63,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ testimonials, setView 
                 </div>
             )}
           </div>
+        </section>
+
+        {/* Create Community CTA Section */}
+        <section className="py-20 bg-white">
+            <div className="container mx-auto px-4 text-center">
+                <h2 className="text-3xl font-bold text-gray-900">Start Your Own Community</h2>
+                <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
+                Bring your club, group, or project to life. It's easy to get started and connect with like-minded students on campus.
+                </p>
+                <button
+                onClick={() => setView({ type: 'AUTH', isSigningUp: true })}
+                className="mt-8 px-8 py-3 text-lg font-semibold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transform hover:scale-105 transition-transform"
+                >
+                Create Your Community Page
+                </button>
+            </div>
         </section>
       </main>
 

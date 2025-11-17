@@ -1,46 +1,116 @@
-import React from 'react';
-import { Session, UserProfile, View } from '../types';
-import { AcademicCapIcon, ArrowPathRoundedSquareIcon, BellIcon } from './Icons';
+import React, { useEffect } from 'react';
+import { Notification, View, Community, CommunityPost } from '../types';
+import { AcademicCapIcon, BellIcon } from './Icons';
+import Avatar from './Avatar';
 
 interface NotificationsPageProps {
-  currentUser: UserProfile;
-  sessions: Session[];
+  notifications: Notification[];
   setView: (view: View) => void;
   onBack: () => void;
+  markAsRead: () => void;
+  communities: Community[];
+  posts: CommunityPost[];
 }
 
 const formatTimestamp = (timestamp: { seconds: number; nanoseconds: number }) => {
     const date = new Date(timestamp.seconds * 1000);
     const now = new Date();
     const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    const diffDays = Math.floor(diffSeconds / 86400);
 
     if (diffSeconds < 60) return 'Just now';
     if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
     if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
-    if (diffDays === 1) return 'Yesterday';
-    return `${diffDays} days ago`;
+    return `${Math.floor(diffSeconds / 86400)}d ago`;
 };
 
-export const NotificationsPage: React.FC<NotificationsPageProps> = ({ currentUser, sessions, setView, onBack }) => {
-  const relevantSessions = sessions.filter(session => {
-    // Basic criteria: session must be in the future, not created by the current user, and new since last check.
-    const isFuture = session.scheduledAt.seconds * 1000 > new Date().getTime();
-    const notMySession = session.creatorId !== currentUser.uid;
-    const isNew = currentUser.lastCheckedNotifications ? session.createdAt.seconds > currentUser.lastCheckedNotifications.seconds : true;
+const NotificationItem: React.FC<{ 
+    notification: Notification; 
+    setView: (view: View) => void;
+    communities: Community[];
+    posts: CommunityPost[];
+}> = ({ notification, setView, communities, posts }) => {
+    
+    const handleClick = () => {
+        if (notification.type === 'NEW_SESSION') {
+            setView({ type: 'SKILL_SHARING' });
+        } else if (notification.type === 'NEW_COMMUNITY_POST') {
+            const community = communities.find(c => c.id === notification.communityId);
+            const post = posts.find(p => p.id === notification.postId);
+            if (community && post) {
+                 setView({ type: 'COMMUNITY_POST_DETAIL', post, community });
+            } else {
+                alert("The post or community could not be found. It may have been deleted.");
+            }
+        }
+    };
 
-    if (!isFuture || !notMySession || !isNew) {
-      return false;
-    }
-    
-    // Stricter Audience Targeting Logic:
-    // A user must match BOTH the college and year criteria.
-    const collegeMatch = session.targetColleges.includes('All') || session.targetColleges.includes(currentUser.college);
-    const yearMatch = session.targetYears.includes('All') || session.targetYears.includes(currentUser.year);
-    
-    // The session is only considered relevant if the user fits the specified audience.
-    return collegeMatch && yearMatch;
-  });
+    const renderContent = () => {
+        switch (notification.type) {
+            case 'NEW_SESSION':
+                return (
+                    <>
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-blue-100">
+                            <AcademicCapIcon className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-800">
+                                New Session: <span className="font-semibold text-gray-900">{notification.sessionTopic}</span>
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                Hosted by {notification.sessionCreatorName}
+                            </p>
+                        </div>
+                    </>
+                );
+            case 'NEW_COMMUNITY_POST':
+                return (
+                    <>
+                        <div className="flex-shrink-0">
+                           <Avatar name={notification.communityName} className="h-10 w-10 rounded-md"/>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-800">
+                                New post in <span className="font-semibold text-gray-900">{notification.communityName}</span>
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                By {notification.postAuthorName}
+                            </p>
+                        </div>
+                    </>
+                );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <li
+            onClick={handleClick}
+            className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-indigo-50' : ''}`}
+        >
+            <div className="flex items-center space-x-4">
+                {renderContent()}
+                <div className="flex items-center space-x-3">
+                    <p className="text-sm text-gray-500 whitespace-nowrap">
+                        {formatTimestamp(notification.createdAt)}
+                    </p>
+                    {!notification.isRead && (
+                        <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full flex-shrink-0"></div>
+                    )}
+                </div>
+            </div>
+        </li>
+    );
+};
+
+export const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, setView, onBack, markAsRead, communities, posts }) => {
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        markAsRead();
+    }, 1000); // Mark as read after a short delay to allow user to see the unread state briefly.
+    return () => clearTimeout(timer);
+  }, [markAsRead]);
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -54,10 +124,10 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ currentUse
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="p-6 border-b">
                 <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-                <p className="text-gray-600 mt-1">New sessions that might interest you.</p>
+                <p className="text-gray-600 mt-1">Updates from your communities and sessions.</p>
             </div>
             <div>
-                {relevantSessions.length === 0 ? (
+                {notifications.length === 0 ? (
                      <div className="p-10 text-center text-gray-500 flex flex-col items-center">
                         <BellIcon className="h-16 w-16 text-gray-400 mb-4" />
                         <h3 className="text-lg font-semibold text-gray-700">All Caught Up!</h3>
@@ -65,30 +135,14 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ currentUse
                     </div>
                 ) : (
                     <ul className="divide-y divide-gray-200">
-                        {relevantSessions.map(session => (
-                            <li key={session.id} className="p-4 hover:bg-gray-50 cursor-pointer" onClick={() => setView({type: 'SKILL_SHARING'})}>
-                                <div className="flex items-center space-x-4">
-                                    <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${session.sessionType === 'Lecture' ? 'bg-blue-100' : 'bg-green-100'}`}>
-                                        {session.sessionType === 'Lecture' ? 
-                                            <AcademicCapIcon className="h-6 w-6 text-blue-600" /> :
-                                            <ArrowPathRoundedSquareIcon className="h-6 w-6 text-green-600" />
-                                        }
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">
-                                            New {session.sessionType}: <span className="font-bold">{session.topic}</span>
-                                        </p>
-                                        <p className="text-sm text-gray-500 truncate">
-                                            Hosted by {session.creator}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 whitespace-nowrap">
-                                            {formatTimestamp(session.createdAt)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </li>
+                        {notifications.map(notif => (
+                           <NotificationItem 
+                                key={notif.id} 
+                                notification={notif} 
+                                setView={setView} 
+                                communities={communities}
+                                posts={posts}
+                            />
                         ))}
                     </ul>
                 )}

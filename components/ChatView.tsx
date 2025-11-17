@@ -24,6 +24,9 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, currentUser, otherUser, onB
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
+  const isBlockedByMe = currentUser.blockedUsers?.includes(otherUser.uid);
+  const isBlockedByOther = otherUser.blockedUsers?.includes(currentUser.uid);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -44,44 +47,59 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, currentUser, otherUser, onB
     });
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const msgs = querySnapshot.docs.map(doc => {
+      let msgs = querySnapshot.docs.map(doc => {
         const data = doc.data();
         const createdAt = data.createdAt 
             ? { seconds: data.createdAt.seconds, nanoseconds: data.createdAt.nanoseconds }
             : { seconds: Date.now() / 1000, nanoseconds: 0 }; // Fallback for optimistic updates
-        return { ...data, id: doc.id, createdAt } as ChatMessage;
+        return {
+          id: doc.id,
+          text: data.text,
+          senderId: data.senderId,
+          createdAt: createdAt,
+        } as ChatMessage;
       });
+
+      // Filter messages if the other user is blocked by the current user
+      if (isBlockedByMe) {
+        msgs = msgs.filter(msg => msg.senderId === currentUser.uid);
+      }
+
       setMessages(msgs);
     }, (error) => {
         console.error("Error fetching messages:", error);
     });
 
     return () => unsubscribe();
-  }, [chatId, currentUser.uid]);
+  }, [chatId, currentUser.uid, isBlockedByMe]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim() === '') return;
+    if (newMessage.trim() === '' || isBlockedByMe) return;
 
     const messageText = newMessage;
     setNewMessage('');
 
-    const messagesRef = collection(db, 'chats', chatId, 'messages');
-    await addDoc(messagesRef, {
-      text: messageText,
-      senderId: currentUser.uid,
-      createdAt: serverTimestamp(),
-    });
-
-    const chatRef = doc(db, 'chats', chatId);
-    await updateDoc(chatRef, {
-      lastMessage: {
+    // If the sender is blocked by the other user, do not save the message to the database.
+    // The UI will show a message indicating they are blocked.
+    if (!isBlockedByOther) {
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      await addDoc(messagesRef, {
         text: messageText,
-        createdAt: serverTimestamp(),
         senderId: currentUser.uid,
-      },
-      [`unreadCount.${otherUser.uid}`]: increment(1)
-    });
+        createdAt: serverTimestamp(),
+      });
+
+      const chatRef = doc(db, 'chats', chatId);
+      await updateDoc(chatRef, {
+        lastMessage: {
+          text: messageText,
+          createdAt: serverTimestamp(),
+          senderId: currentUser.uid,
+        },
+        [`unreadCount.${otherUser.uid}`]: increment(1),
+      });
+    }
   };
 
   const shouldShowAvatar = (currentMsg: ChatMessage, prevMsg: ChatMessage | undefined) => {
@@ -141,19 +159,34 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, currentUser, otherUser, onB
       </main>
 
       <footer className="p-3 border-t bg-white flex-shrink-0">
-        <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 w-full p-3 border border-gray-200 bg-gray-100 text-gray-900 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-            autoComplete="off"
-          />
-          <button type="submit" className="bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition-transform transform hover:scale-110 disabled:bg-blue-300 disabled:scale-100" disabled={!newMessage.trim()}>
-            <SendIcon className="h-6 w-6" />
-          </button>
-        </form>
+        {isBlockedByMe ? (
+            <div className="p-4 text-center text-sm text-gray-600 bg-gray-100 rounded-lg">
+                You have blocked this user. Unblock them to send messages.
+            </div>
+        ) : (
+            <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type a message..."
+                className="flex-1 w-full p-3 border border-gray-200 bg-gray-100 text-gray-900 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                autoComplete="off"
+              />
+              <button
+                type="submit"
+                className="bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition-transform transform hover:scale-110 disabled:bg-blue-300 disabled:scale-100"
+                disabled={!newMessage.trim()}
+              >
+                <SendIcon className="h-6 w-6" />
+              </button>
+            </form>
+        )}
+        {isBlockedByOther && (
+            <p className="text-xs text-center text-gray-500 mt-2 px-4">
+                This user has blocked you. They will not see your messages or receive notifications.
+            </p>
+        )}
       </footer>
     </div>
   );

@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { 
   createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  AuthError
+  signInWithEmailAndPassword
 } from 'firebase/auth';
 
 const getFriendlyErrorMessage = (errorCode: string): string => {
@@ -49,7 +48,9 @@ export const Auth: React.FC<AuthProps> = ({ isSigningUp = false }) => {
       }
       // onAuthStateChanged in App.tsx will handle navigation
     } catch (err) {
-      const authError = err as AuthError;
+      // FIX: The `AuthError` type from firebase was causing a TypeScript error as it was missing the 'code' property.
+      // Casting to a generic object with a 'code' property to safely access it.
+      const authError = err as { code: string };
       setError(getFriendlyErrorMessage(authError.code));
     } finally {
       setLoading(false);
