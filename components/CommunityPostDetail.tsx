@@ -257,7 +257,7 @@ export const CommunityPostDetail: React.FC<CommunityPostDetailProps> = ({ post: 
                                         >
                                             {post.imageUrls.map((url, index) => (
                                                 <div key={index} className="flex-shrink-0 w-full aspect-video scroll-snap-center bg-gray-200">
-                                                    <img src={url} alt={`Post image ${index + 1}`} className="w-full h-full object-cover" draggable="false" />
+                                                    <img src={url} alt={`Post image ${index + 1}`} className="w-full h-full object-contain" draggable="false" />
                                                 </div>
                                             ))}
                                         </div>
